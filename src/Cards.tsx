@@ -14,6 +14,7 @@ interface IState {
   targetX: number,
   draggingCard: boolean,
   activeId: string | null,
+  isTransitioning: boolean
 }
 
 class Cards extends React.Component<{}, IState> {
@@ -32,6 +33,7 @@ class Cards extends React.Component<{}, IState> {
     screenX: 0,
     targetX: 0,
     draggingCard: false,
+    isTransitioning: false,
     activeId: null,
   }
 
@@ -53,9 +55,9 @@ class Cards extends React.Component<{}, IState> {
       <small>draggingCard: {this.state.draggingCard ? "dragging" : "not dragging"}</small><br/>
     <small>activeId: {this.state.activeId} .</small><br/>
 
-      {this.state.cards.map(card => 
+      {this.state.cards.map((card, i) => 
         <div
-          style={(this.state.activeId === card.id) ? this.activeStyles : this.defaultStyles}
+          style={(this.state.activeId === card.id) ? this.activeStyles : this.defaultStyles(i)}
           onMouseDown={(e) => this.onStart(e, card.id)}
           onMouseMove={this.onMove}
           onMouseUp={this.onEnd}
@@ -78,11 +80,13 @@ class Cards extends React.Component<{}, IState> {
     }
   }
 
-  public get defaultStyles(){
+  public defaultStyles(i: number){
     return {
-      transform: "none",
+      transform: this.state.isTransitioning ? `translateY(${this.targetBCR.height + 20}px)` : `translateY(0px)`,
       opacity: 1,
-      willChange: 'initial'
+      willChange: 'initial',
+      // Move the card down then slide it up, with delay according to "distance"
+      transition: `transform 150ms cubic-bezier(0,0,0.31,1) ${i*50}ms`,
     }
   }
 
@@ -169,7 +173,7 @@ class Cards extends React.Component<{}, IState> {
     // If the card is nearly gone.
     if (isNearlyInvisible) {
 
-      // Bail if there's no target or it's not attached to a parent anymore.
+      // Bail
       if (!this.state.activeId) {
         return;
       }
@@ -179,65 +183,21 @@ class Cards extends React.Component<{}, IState> {
         activeId: null,
       })
 
-      // Slide all the other cards.
-      // this.animateOtherCardsIntoPosition(targetIndex);
-
     } else if (isNearlyAtStart) {
-      this.target = null;
-      
-      this.setState({
-        activeId: null,
-      })
-      // this.resetTarget();
+      this.resetTarget();
     }
   }
 
-  public animateOtherCardsIntoPosition = (startIndex: number) => {
-    // If removed card was the last one, there is nothing to animate.
-    // Remove the target.
-    if (startIndex === this.state.cards.length) {
-      this.resetTarget();
-      return;
-    }
-
-    const onAnimationComplete = (evt: any) => {
-      const card = evt.target;
-      card.removeEventListener('transitionend', onAnimationComplete);
-      card.style.transition = '';
-      card.style.transform = '';
-
-      this.resetTarget();
-    };
-
-    // Set up all the card animations.
-    for (let i = startIndex; i < this.state.cards.length; i++) {
-      // const card = this.state.cards[i];
-
-      // Move the card down then slide it up.
-      // card.style.transform = `translateY(${this.targetBCR.height + 20}px)`;
-      // card.addEventListener('transitionend', onAnimationComplete);
-    }
-
-    // Now init them.
-    requestAnimationFrame(_ => {
-      for (let i = startIndex; i < this.state.cards.length; i++) {
-       // const card = this.state.cards[i];
-
-        // Move the card down then slide it up, with delay according to "distance"
-        // card.style.transition = `transform 150ms cubic-bezier(0,0,0.31,1) ${i*50}ms`;
-        // card.style.transform = '';
-      }
-    });
-  }
 
   public resetTarget = () => {
     if (!this.target){
       return;
     }
-
-    this.target.style.willChange = 'initial';
-    this.target.style.transform = 'none';
     this.target = null;
+      
+    this.setState({
+      activeId: null,
+    })
   }
 }
 
