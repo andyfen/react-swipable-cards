@@ -2,10 +2,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
-import registerServiceWorker from './registerServiceWorker';
+
+import AppProvider from "./AppProvider"
 
 ReactDOM.render(
-  <App />,
+  <AppProvider>
+    <App />
+  </AppProvider>,
   document.getElementById('root') as HTMLElement
 );
-registerServiceWorker();
+

@@ -1,67 +1,57 @@
 import * as React from 'react';
 import './App.css';
 
-interface ICard {
-  id: string;
-  text: string;
-}
+import { ITodo } from "./Interfaces";
 
 interface IState {
-  cards: ICard[],
   startX: number,
   currentX: number,
   screenX: number,
   targetX: number,
   draggingCard: boolean,
-  activeId: string | null,
-  isTransitioning: boolean
+  activeId?: string | null,
 }
 
-class Cards extends React.Component<{}, IState> {
+interface IProps {
+  todos: ITodo[],
+  remove: (id: string) => void
+}
+
+class TodoList extends React.Component<IProps, IState> {
   public state: IState = {
-    cards: [
-      {id: "1", text: "Das Surma" },
-      {id: "2", text: "Aerotwist" },
-      {id: "3", text: "Kinlanimus Maximus" },
-      {id: "4", text: "Addyoooooooooo"},
-      {id: "5", text: "Gaunty McGaunty Gaunt" },
-      {id: "6", text: "Jack Archibungle" },
-      {id: "7", text: "Sam The Dutts Dutton" },
-    ],
     startX: 0,
     currentX: 0,
     screenX: 0,
     targetX: 0,
     draggingCard: false,
-    isTransitioning: false,
     activeId: null,
   }
 
-  public targetBCR: any | null;
-  public target: any | null;
+  public targetBCR?: any;
+  public target?: any;
 
-  constructor(props: {}){
+  constructor(props: IProps){
     super(props)
     requestAnimationFrame(this.update);
   }
 
   public render() {
     return (
-      <div className="card-container">
-      <small>startX: {this.state.startX}</small><br/>
-      <small>currentX: {this.state.currentX}</small><br/>
-      <small>screenX: {this.state.screenX}</small><br/>
-      <small>targetX: {this.state.targetX}</small><br/>
-      <small>draggingCard: {this.state.draggingCard ? "dragging" : "not dragging"}</small><br/>
-    <small>activeId: {this.state.activeId} .</small><br/>
+      <div className="container">
 
-      {this.state.cards.map((card, i) => 
+      {this.props.todos.map((card, i) => 
         <div
-          style={(this.state.activeId === card.id) ? this.activeStyles : this.defaultStyles(i)}
-          onMouseDown={(e) => this.onStart(e, card.id)}
-          onMouseMove={this.onMove}
+          style={(this.state.activeId === card.id) ? 
+            this.activeStyles : 
+            this.defaultStyles
+          }
+          onMouseDown={(e) => this.onStartMouse(e, card.id)}
+          onMouseMove={this.onMoveMouse}
           onMouseUp={this.onEnd}
-          key={card.id } 
+          onTouchStart={(e) => this.onStartTouch(e, card.id)}
+          onTouchMove={this.onMoveTouch}
+          onTouchEnd={this.onEnd}
+          key={card.id} 
           className="card">
           {card.text}
         </div>
@@ -70,7 +60,7 @@ class Cards extends React.Component<{}, IState> {
     );
   }
 
-  public get activeStyles(){
+  private get activeStyles(){
     const normalizedDragDistance =
       (Math.abs(this.state.screenX) / this.targetBCR.width);
     return {
@@ -80,31 +70,45 @@ class Cards extends React.Component<{}, IState> {
     }
   }
 
-  public defaultStyles(i: number){
+  private get defaultStyles(){
     return {
-      transform: this.state.isTransitioning ? `translateY(${this.targetBCR.height + 20}px)` : `translateY(0px)`,
+      transform: "none",
       opacity: 1,
       willChange: 'initial',
-      // Move the card down then slide it up, with delay according to "distance"
-      transition: `transform 150ms cubic-bezier(0,0,0.31,1) ${i*50}ms`,
     }
   }
 
-  public onStart = (evt: React.MouseEvent<HTMLElement>, id: string) => {
+  private onStartMouse = (evt: React.MouseEvent<HTMLElement>, id: string) => {
     this.target = evt.target;
     this.targetBCR = this.target.getBoundingClientRect();
 
+    const startX = evt.pageX;
+    
     this.setState({
-      startX: evt.pageX,
-      currentX: evt.pageX,
+      startX,
+      currentX: startX,
       draggingCard: true,
       activeId: id
     })
-
     evt.preventDefault();
   }
 
-  public onMove = (evt: React.MouseEvent<HTMLElement>) => {
+  private onStartTouch = (evt: React.TouchEvent<HTMLElement>, id: string) => {
+    this.target = evt.target;
+    this.targetBCR = this.target.getBoundingClientRect();
+
+    const startX = evt.touches[0].pageX;
+
+    this.setState({
+      startX,
+      currentX: startX,
+      draggingCard: true,
+      activeId: id
+    })
+  }
+
+
+  private onMoveMouse = (evt: React.MouseEvent<HTMLElement>) => {
     this.setState({
       currentX: evt.pageX
     })
@@ -120,7 +124,23 @@ class Cards extends React.Component<{}, IState> {
     }
   }
 
-  public onEnd = () => {
+  private onMoveTouch = (evt: React.TouchEvent<HTMLElement>) => {
+    this.setState({
+      currentX: evt.touches[0].pageX
+    })
+
+    if (this.state.draggingCard) {
+      this.setState({
+        screenX: this.state.currentX - this.state.startX
+      })
+    } else {
+      this.setState({
+        screenX: this.state.screenX + (this.state.targetX - this.state.screenX) / 4
+      })
+    }
+  }
+
+  private onEnd = () => {
     if (!this.state.activeId) {
       return
     }
@@ -145,10 +165,10 @@ class Cards extends React.Component<{}, IState> {
     })
   }
 
-  public update = () => {
+  private update = () => {
     requestAnimationFrame(this.update);
 
-    if (!this.target /* || !this.state.activeId*/) {
+    if (!this.target || !this.state.activeId) {
       return;
     }
 
@@ -177,9 +197,9 @@ class Cards extends React.Component<{}, IState> {
       if (!this.state.activeId) {
         return;
       }
-
+      this.props.remove(this.state.activeId)
+      
       this.setState({
-        cards: this.state.cards.filter(card => card.id !== this.state.activeId),
         activeId: null,
       })
 
@@ -188,8 +208,7 @@ class Cards extends React.Component<{}, IState> {
     }
   }
 
-
-  public resetTarget = () => {
+  private resetTarget = () => {
     if (!this.target){
       return;
     }
@@ -201,5 +220,5 @@ class Cards extends React.Component<{}, IState> {
   }
 }
 
-export default Cards;
+export default TodoList;
 
