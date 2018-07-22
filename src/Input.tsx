@@ -12,15 +12,32 @@ export default class Input extends React.Component<IProps, IState> {
   public state: IState = {
     text: ""
   }
+  public textInput?: React.RefObject<HTMLInputElement>;
+
+  constructor(props: IProps) {
+    super(props);
+    this.textInput = React.createRef();
+  }
+
+  public componentDidMount(){
+    if(this.textInput 
+      && this.textInput.current 
+      && typeof this.textInput.current.focus === "function"
+    ){
+      this.textInput.current.focus();
+    }
+  }
 
   public render(){
     return (
       <div className="container">
         <input
+          ref={this.textInput}
           className="input"
           value={this.state.text} 
           onChange={this.onHandleChange}
           onKeyPress={this.onHandleKeypress}
+          placeholder="What needs doing ?"
         />
       </div>
     )
@@ -39,7 +56,14 @@ export default class Input extends React.Component<IProps, IState> {
       this.setState({
         text: ""
       })
-   }
+
+      if(this.textInput 
+        && this.textInput.current 
+        && typeof this.textInput.current.blur === "function"
+      ){
+        this.textInput.current.blur();
+      }
+    }
   }
 }
 

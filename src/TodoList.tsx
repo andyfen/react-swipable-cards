@@ -2,6 +2,7 @@ import * as React from 'react';
 import './App.css';
 
 import { ITodo } from "./Interfaces";
+import { isTouch } from "./Utils";
 
 interface IState {
   startX: number,
@@ -39,17 +40,17 @@ class TodoList extends React.Component<IProps, IState> {
     return (
       <div className="container">
 
-      {this.props.todos.map((card, i) => 
+      {this.props.todos.map((card) => 
         <div
           style={(this.state.activeId === card.id) ? 
             this.activeStyles : 
             this.defaultStyles
           }
-          onMouseDown={(e) => this.onStartMouse(e, card.id)}
-          onMouseMove={this.onMoveMouse}
+          onMouseDown={(e) => this.onStart(e, card.id)}
+          onMouseMove={this.onMove}
           onMouseUp={this.onEnd}
-          onTouchStart={(e) => this.onStartTouch(e, card.id)}
-          onTouchMove={this.onMoveTouch}
+          onTouchStart={(e) => this.onStart(e, card.id)}
+          onTouchMove={this.onMove}
           onTouchEnd={this.onEnd}
           key={card.id} 
           className="card">
@@ -78,12 +79,11 @@ class TodoList extends React.Component<IProps, IState> {
     }
   }
 
-  private onStartMouse = (evt: React.MouseEvent<HTMLElement>, id: string) => {
+  private onStart = (evt: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>, id: string) => {
     this.target = evt.target;
     this.targetBCR = this.target.getBoundingClientRect();
+    const startX = isTouch(evt) ? evt.touches[0].pageX : evt.pageX
 
-    const startX = evt.pageX;
-    
     this.setState({
       startX,
       currentX: startX,
@@ -93,40 +93,10 @@ class TodoList extends React.Component<IProps, IState> {
     evt.preventDefault();
   }
 
-  private onStartTouch = (evt: React.TouchEvent<HTMLElement>, id: string) => {
-    this.target = evt.target;
-    this.targetBCR = this.target.getBoundingClientRect();
-
-    const startX = evt.touches[0].pageX;
-
+  private onMove = (evt: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>) => {
+    const currentX = isTouch(evt) ? evt.touches[0].pageX : evt.pageX
     this.setState({
-      startX,
-      currentX: startX,
-      draggingCard: true,
-      activeId: id
-    })
-  }
-
-
-  private onMoveMouse = (evt: React.MouseEvent<HTMLElement>) => {
-    this.setState({
-      currentX: evt.pageX
-    })
-
-    if (this.state.draggingCard) {
-      this.setState({
-        screenX: this.state.currentX - this.state.startX
-      })
-    } else {
-      this.setState({
-        screenX: this.state.screenX + (this.state.targetX - this.state.screenX) / 4
-      })
-    }
-  }
-
-  private onMoveTouch = (evt: React.TouchEvent<HTMLElement>) => {
-    this.setState({
-      currentX: evt.touches[0].pageX
+      currentX
     })
 
     if (this.state.draggingCard) {

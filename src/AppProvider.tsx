@@ -10,9 +10,6 @@ export interface IAppState {
 }
 
 export interface IAppContext extends IAppState {
-  // error: string | null;
-	// loading: boolean;
-  // todos: ITodo[];
   add: (title: string) => void;
   remove: (id: string) => void;
 }
