@@ -9,7 +9,7 @@ interface IState {
 }
 
 export default class Input extends React.Component<IProps, IState> {
-  public state: IState = {
+  public readonly state: IState = {
     text: ""
   }
   public textInput?: React.RefObject<HTMLInputElement>;

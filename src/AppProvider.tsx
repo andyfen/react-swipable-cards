@@ -19,7 +19,7 @@ const KEY_LOCALSTORAGE = "todos";
 export const TodosContext = React.createContext({});
 
 export default class TodosStore extends React.Component<{}, IAppState, IAppContext> {
-	public state: IAppState = {
+	public readonly state: IAppState = {
 		error: null,
 		loading: false,
 		todos: [

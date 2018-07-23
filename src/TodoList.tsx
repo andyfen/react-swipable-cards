@@ -19,7 +19,7 @@ interface IProps {
 }
 
 class TodoList extends React.Component<IProps, IState> {
-  public state: IState = {
+  public readonly state: IState = {
     startX: 0,
     currentX: 0,
     screenX: 0,
@@ -28,8 +28,8 @@ class TodoList extends React.Component<IProps, IState> {
     activeId: null,
   }
 
-  public targetBCR?: any;
-  public target?: any;
+  private targetBCR?: any;
+  private target?: any;
 
   constructor(props: IProps){
     super(props)
