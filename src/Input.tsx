@@ -12,7 +12,7 @@ export default class Input extends React.Component<IProps, IState> {
   public readonly state: IState = {
     text: ""
   }
-  public textInput?: React.RefObject<HTMLInputElement>;
+  private textInput?: React.RefObject<HTMLInputElement>;
 
   constructor(props: IProps) {
     super(props);
