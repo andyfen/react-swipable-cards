@@ -28,8 +28,8 @@ class TodoList extends React.Component<IProps, IState> {
     activeId: null,
   }
 
-  private targetBCR?: any;
-  private target?: any;
+  private targetBCR?: ClientRect;
+  private target?: HTMLElement | null;
 
   constructor(props: IProps){
     super(props)
@@ -39,7 +39,6 @@ class TodoList extends React.Component<IProps, IState> {
   public render() {
     return (
       <div className="container">
-
       {this.props.todos.map((card) => 
         <div
           style={(this.state.activeId === card.id) ? 
@@ -63,7 +62,7 @@ class TodoList extends React.Component<IProps, IState> {
 
   private get activeStyles(){
     const normalizedDragDistance =
-      (Math.abs(this.state.screenX) / this.targetBCR.width);
+      (Math.abs(this.state.screenX) / this.targetBCR!.width);
     return {
       transform: `translateX(${this.state.screenX}px)`,
       opacity: 1 - Math.pow(normalizedDragDistance, 3),
@@ -80,7 +79,7 @@ class TodoList extends React.Component<IProps, IState> {
   }
 
   private onStart = (evt: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>, id: string) => {
-    this.target = evt.target;
+    this.target = evt.target as HTMLElement;
     this.targetBCR = this.target.getBoundingClientRect();
     const startX = isTouch(evt) ? evt.touches[0].pageX : evt.pageX
 
@@ -120,13 +119,13 @@ class TodoList extends React.Component<IProps, IState> {
     })
 
     const screenX = this.state.currentX - this.state.startX;
-    const threshold = this.targetBCR.width * 0.35;
+    const threshold = this.targetBCR!.width * 0.35;
 
     if (Math.abs(screenX) > threshold) {
       this.setState({
         targetX: (screenX > 0) ?
-        this.targetBCR.width :
-       -this.targetBCR.width
+        this.targetBCR!.width :
+       -this.targetBCR!.width
       })
     }
 
